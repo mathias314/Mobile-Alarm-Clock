@@ -1,27 +1,40 @@
-//www.elegoo.com
-//2016.12.12
+// lab2b.c
+// Mathew Clutter
+// AVR ATMega 2560 @16MHz
+// 7 segment display interfacing
+// displays 0-9 on the 7 seg display
 
-int latch=9;  //74HC595  pin 9 STCP
-int clock=10; //74HC595  pin 10 SHCP
-int data=8;   //74HC595  pin 8 DS
+// connect the segments to PORTA in order (segment A to pin 0, etc)
 
-unsigned char table[]=
-{0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c
-,0x39,0x5e,0x79,0x71,0x00};
+#include <avr/io.h>
+#include <util/delay.h>
 
-void setup() {
-  pinMode(latch,OUTPUT);
-  pinMode(clock,OUTPUT);
-  pinMode(data,OUTPUT);
-}
-void Display(unsigned char num)
+int main()
 {
+  DDRA = 0xFF;
+  PORTA = 0x00;
 
-  digitalWrite(latch,LOW);
-  shiftOut(data,clock,MSBFIRST,table[num]);
-  digitalWrite(latch,HIGH);
-  
-}
-void loop() {
-  Display(0x00);
+  DDRH = 0x00; 
+  // PORTH = 0x00;
+
+  unsigned char displayArray[10];
+  displayArray[0] = 0b00111111;
+  displayArray[1] = 0b00000110;
+  displayArray[2] = 0b01011011;
+  displayArray[3] = 0b01001111;
+  displayArray[4] = 0b01100110;
+  displayArray[5] = 0b01101101;
+  displayArray[6] = 0b01111101;
+  displayArray[7] = 0b00000111;
+  displayArray[8] = 0b01111111;
+  displayArray[9] = 0b01101111;
+
+  while(1)
+  {
+    for(int i = 0; i < 10; i++)
+    {
+      PORTA = ~displayArray[i];
+      _delay_ms(1000); 
+    }
+  }
 }
