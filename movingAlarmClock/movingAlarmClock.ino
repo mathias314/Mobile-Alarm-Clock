@@ -50,9 +50,9 @@ void writeNum(unsigned int num)
 
 void setup()
 {
-  Serial.begin(9600);
+  // Serial.begin(9600);
 
-  Serial.println("Initialize RTC module");
+  // Serial.println("Initialize RTC module");
   // Initialize DS3231
   clock.begin();
 
@@ -89,15 +89,6 @@ void loop()
 {
   dt = clock.getDateTime();
 
-  // For leading zero look to DS3231_dateformat example
-
-  
-  Serial.print(dt.hour);   
-  Serial.print(":");
-  Serial.print(dt.minute);
-  Serial.println();
-
-  writeNum(dt.second);
-  
-  // delay(1000);
+  int timeToDisplay = (dt.hour * 100) + dt.minute;
+  writeNum(timeToDisplay);
 }
