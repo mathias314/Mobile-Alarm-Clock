@@ -153,7 +153,7 @@ int main()
   displayInit();
   TWI_init();
   RTC_init();
-  // RTC_setTime(17, 9); // set time before uploading!
+  RTC_setTime(17, 18); // set time before uploading!
   int currTime;
   Serial.begin(9600);
 
