@@ -1,8 +1,14 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <HCSR04.h>
 
 #define DS1307_READ_ADDR 0xD1
 #define DS1307_WRITE_ADDR 0xD0
+
+#define TRIG_PIN 15
+#define ECHO_PIN 16
+
+UltraSonicDistanceSensor distanceSensor(15, 16);
 
 void writeNum(unsigned int);
 
@@ -148,20 +154,33 @@ void displayInit()
   PORTC = 0xFF;
 }
 
+void ultrasonicInit()
+{
+  sei();
+}
+
 int main()
 {
   displayInit();
   TWI_init();
   RTC_init();
-  RTC_setTime(17, 18); // set time before uploading!
+  ultrasonicInit();
+  RTC_setTime(16, 23); // set time before uploading!
   int currTime;
+  float dist = 0;
   Serial.begin(9600);
+  _delay_ms(1000);
 
   while(1)
   {
     currTime = RTC_getTime();
     writeNum(currTime);
-    Serial.println(currTime);
+    dist = distanceSensor.measureDistanceCm();
+    if(dist < 0)
+    {
+      dist = 400;
+    }
+    Serial.println(dist);
   }
 
   return -1;

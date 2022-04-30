@@ -10,3 +10,5 @@ when started:
 	starts dc motors (sets speed based on distance from ultrasonic sensor)
 	stops when push button is pressed
 
+ultrasonic library: https://github.com/Martinsos/arduino-lib-hc-sr04
+
