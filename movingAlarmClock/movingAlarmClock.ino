@@ -165,9 +165,9 @@ int main()
   TWI_init();
   RTC_init();
   ultrasonicInit();
-  RTC_setTime(16, 23); // set time before uploading!
+  // RTC_setTime(19, 34); // set time before uploading!
   int currTime;
-  float dist = 0;
+  int dist = 0;
   Serial.begin(9600);
   _delay_ms(1000);
 
@@ -175,7 +175,7 @@ int main()
   {
     currTime = RTC_getTime();
     writeNum(currTime);
-    dist = distanceSensor.measureDistanceCm();
+    dist = int(distanceSensor.measureDistanceCm());
     if(dist < 0)
     {
       dist = 400;
