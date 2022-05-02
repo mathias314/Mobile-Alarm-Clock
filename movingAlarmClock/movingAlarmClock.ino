@@ -10,7 +10,7 @@
 #define TRIG_PIN 15
 #define ECHO_PIN 16
 
-int receiver = 11; // Signal Pin of IR receiver to Arduino Digital Pin 11
+int receiver = 49;
 
 bool active = false;
 
@@ -182,6 +182,12 @@ void buttonInit()
   EIMSK |= 0x10;
 }
 
+void buzzerInit()
+{
+  // need to either use 16 bit timer, or OC0B
+  // the ir remote uses timer 2 for it's interrupts...
+}
+
 int main()
 {
   displayInit();
@@ -190,6 +196,7 @@ int main()
   ultrasonicInit();
   remoteInit();
   buttonInit();
+  // buzzerInit();
   
   // RTC_setTime(21, 35); // set time before uploading!
   
@@ -201,6 +208,10 @@ int main()
   while(1)
   {
     Serial.println(active);
+
+    currTime = RTC_getTime();
+    writeNum(currTime);
+    
     if(irrecv.decode(&results))
       {
         if(results.value == 0xFF02FD)
@@ -211,14 +222,21 @@ int main()
         irrecv.resume();
       }
     
-    currTime = RTC_getTime();
-    writeNum(currTime);
     dist = int(distanceSensor.measureDistanceCm());
     if(dist < 0)
     {
       dist = 400;
     }
-    // Serial.println(dist);
+
+    if(active)
+    {
+      OCR0A = map(dist, 0, 400, 255, 0);
+      // set buzzer tone
+    }
+    else
+    {
+      // turn buzzer off
+    }
   }
 
   return -1;
