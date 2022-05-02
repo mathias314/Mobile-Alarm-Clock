@@ -188,6 +188,19 @@ void buzzerInit()
   // the ir remote uses timer 2 for it's interrupts...
 }
 
+void motorInit()
+{
+  DDRB = 0xFF;
+  PORTB = 0xFF;
+
+  TCCR0A = 0xA3;
+  TCCR0B = 0x05;
+
+  TCNT0 = 0x00;
+
+  DDRG = 0xFF;
+}
+
 int main()
 {
   displayInit();
@@ -197,8 +210,9 @@ int main()
   remoteInit();
   buttonInit();
   // buzzerInit();
+  motorInit();
   
-  // RTC_setTime(21, 35); // set time before uploading!
+  // RTC_setTime(15, 40); // set time before uploading!
   
   int currTime;
   int dist = 0;
@@ -227,14 +241,17 @@ int main()
     {
       dist = 400;
     }
+    Serial.println(dist);
 
     if(active)
     {
-      OCR0A = map(dist, 0, 400, 255, 0);
-      // set buzzer tone
+      OCR0A = map(dist, 0, 400, 255, 0); // set motor speed accordingly...
+      OCR0B = 192;// set buzzer tone
     }
     else
     {
+      OCR0A = 0;
+      OCR0B = 255;
       // turn buzzer off
     }
   }
