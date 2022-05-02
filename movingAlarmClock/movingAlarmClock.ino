@@ -1,6 +1,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <HCSR04.h>
+#include "IRremote.h"
+#include <avr/interrupt.h>
 
 #define DS1307_READ_ADDR 0xD1
 #define DS1307_WRITE_ADDR 0xD0
@@ -8,7 +10,13 @@
 #define TRIG_PIN 15
 #define ECHO_PIN 16
 
-UltraSonicDistanceSensor distanceSensor(15, 16);
+int receiver = 11; // Signal Pin of IR receiver to Arduino Digital Pin 11
+
+bool active = false;
+
+UltraSonicDistanceSensor distanceSensor(TRIG_PIN, ECHO_PIN);
+IRrecv irrecv(receiver);     // create instance of 'irrecv'
+decode_results results;
 
 void writeNum(unsigned int);
 
@@ -159,13 +167,32 @@ void ultrasonicInit()
   sei();
 }
 
+void remoteInit()
+{
+  irrecv.enableIRIn();
+}
+
+void buttonInit()
+{
+  DDRE = 0x00;
+  sei();
+  // set the int masks on PORTD3:0 on rising edge
+  EICRB = 0xFF;
+  // enable interrupts
+  EIMSK |= 0x10;
+}
+
 int main()
 {
   displayInit();
   TWI_init();
   RTC_init();
   ultrasonicInit();
-  // RTC_setTime(19, 34); // set time before uploading!
+  remoteInit();
+  buttonInit();
+  
+  // RTC_setTime(21, 35); // set time before uploading!
+  
   int currTime;
   int dist = 0;
   Serial.begin(9600);
@@ -173,6 +200,17 @@ int main()
 
   while(1)
   {
+    Serial.println(active);
+    if(irrecv.decode(&results))
+      {
+        if(results.value == 0xFF02FD)
+        {
+          // Serial.println("start!");
+          active = true;
+        }
+        irrecv.resume();
+      }
+    
     currTime = RTC_getTime();
     writeNum(currTime);
     dist = int(distanceSensor.measureDistanceCm());
@@ -180,8 +218,15 @@ int main()
     {
       dist = 400;
     }
-    Serial.println(dist);
+    // Serial.println(dist);
   }
 
   return -1;
+}
+
+
+ISR(INT4_vect)
+{
+  // Serial.println("button pressed");
+  active = false;
 }

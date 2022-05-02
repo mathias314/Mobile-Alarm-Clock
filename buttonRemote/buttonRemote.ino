@@ -1,4 +1,6 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
 #include "IRremote.h"
 
 int receiver = 11; // Signal Pin of IR receiver to Arduino Digital Pin 11
@@ -14,10 +16,21 @@ void remoteInit()
   irrecv.enableIRIn();
 }
 
+void buttonInit()
+{
+  DDRE = 0x00;
+  sei();
+  // set the int masks on PORTD3:0 on rising edge
+  EICRB = 0xFF;
+  // enable interrupts
+  EIMSK |= 0x10;
+}
+
 int main()
 {
   Serial.begin(9600);
   remoteInit();
+  buttonInit();
   while(1)
   {
       if(irrecv.decode(&results))
@@ -33,4 +46,8 @@ int main()
   return -1;
 }
 
-ISR
+ISR(INT4_vect)
+{
+  Serial.println("button pressed");
+  active = false;
+}
