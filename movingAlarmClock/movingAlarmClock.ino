@@ -1,8 +1,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
 #include <HCSR04.h>
 #include "IRremote.h"
-#include <avr/interrupt.h>
 
 #define DS1307_READ_ADDR 0xD1
 #define DS1307_WRITE_ADDR 0xD0
@@ -10,15 +10,30 @@
 #define TRIG_PIN 15
 #define ECHO_PIN 16
 
-int receiver = 49;
+#define receiver 49
 
-bool active = false;
+volatile bool active = false;
 
 UltraSonicDistanceSensor distanceSensor(TRIG_PIN, ECHO_PIN);
 IRrecv irrecv(receiver);     // create instance of 'irrecv'
 decode_results results;
 
-void writeNum(unsigned int);
+void TWI_init();
+void TWI_start();
+void TWI_write(unsigned char data);
+unsigned char TWI_read(unsigned char ackVal);
+void TWI_stop();
+void RTC_init();
+void RTC_setTime(unsigned char hour, unsigned char min);
+int RTC_getTime();
+void writeNum(unsigned int num);
+void displayInit();
+void ultrasonicInit();
+void remoteInit();
+void buttonInit();
+void pwmInit();
+void initAll();
+
 
 unsigned char displayArray[10];
 
@@ -62,16 +77,6 @@ void RTC_init()
   TWI_write(DS1307_WRITE_ADDR);
   TWI_write(0x07);
   TWI_write(0x00);
-  TWI_stop();
-}
-
-void RTC_setDate(unsigned char year, unsigned char mon, unsigned char day)
-{
-  TWI_start();
-  TWI_write(DS1307_WRITE_ADDR);
-  TWI_write(day);
-  TWI_write(mon);
-  TWI_write(year);
   TWI_stop();
 }
 
@@ -182,13 +187,7 @@ void buttonInit()
   EIMSK |= 0x10;
 }
 
-void buzzerInit()
-{
-  // need to either use 16 bit timer, or OC0B
-  // the ir remote uses timer 2 for it's interrupts...
-}
-
-void motorInit()
+void pwmInit()
 {
   DDRB = 0xFF;
   PORTB = 0xFF;
@@ -201,7 +200,7 @@ void motorInit()
   DDRG = 0xFF;
 }
 
-int main()
+void initAll()
 {
   displayInit();
   TWI_init();
@@ -209,15 +208,19 @@ int main()
   ultrasonicInit();
   remoteInit();
   buttonInit();
-  // buzzerInit();
-  motorInit();
+  pwmInit();
+}
+
+int main()
+{
+  initAll(); // call every needed init function
   
-  // RTC_setTime(15, 40); // set time before uploading!
+  // RTC_setTime(16, 17); // set time before uploading!
   
   int currTime;
   int dist = 0;
   Serial.begin(9600);
-  _delay_ms(1000);
+  _delay_ms(500);
 
   while(1)
   {
@@ -227,32 +230,32 @@ int main()
     writeNum(currTime);
     
     if(irrecv.decode(&results))
-      {
+    {
         if(results.value == 0xFF02FD)
         {
           // Serial.println("start!");
           active = true;
         }
         irrecv.resume();
-      }
-    
-    dist = int(distanceSensor.measureDistanceCm());
-    if(dist < 0)
-    {
-      dist = 400;
     }
-    Serial.println(dist);
 
     if(active)
     {
+      dist = int(distanceSensor.measureDistanceCm());
+      if(dist < 0)
+      {
+        dist = 400;
+      }
+      // Serial.println(dist);
       OCR0A = map(dist, 0, 400, 255, 0); // set motor speed accordingly...
+      
       OCR0B = 192;// set buzzer tone
     }
     else
     {
       OCR0A = 0;
       OCR0B = 255;
-      // turn buzzer off
+      // turn motor and buzzer off
     }
   }
 
