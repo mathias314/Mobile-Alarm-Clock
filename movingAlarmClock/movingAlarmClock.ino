@@ -1,3 +1,26 @@
+// Mathew Clutter and Aaron Quizon
+// Embedded Systems Final Project
+// Alarm clock that runs away
+
+// 4 digit 7 segment display connected to ports a and c
+// each segment is connected to port a,
+// with the 'a' segment connected to PA0, the 'b' segment connected to PA1, etc
+// the common anode is connected to port c,
+// leftmost display connected to PC0, rightmost display connected to PC3
+
+// real time clock (rtc) is connected to the I2C ports (SDA and SCL)
+
+// ultrasonic sensor is connected to pins 15 and 16 (PJ0 and PH1)
+// PJ0 connected to ultrasonic trigger pin,
+// PH1 connected to ultrasonic echo pin
+
+// IR remote receiever is connected to pin 49 (PL0)
+
+// finally, the dc motors are connected to OC0A (PB7)
+// the buzzer is connected to OC0B (PG5)
+
+// this program runs on ATMega2560 at 16MHz
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -219,12 +242,12 @@ int main()
   
   int currTime;
   int dist = 0;
-  Serial.begin(9600);
+  // Serial.begin(9600);
   _delay_ms(500);
 
   while(1)
   {
-    Serial.println(active);
+    // Serial.println(active);
 
     currTime = RTC_getTime();
     writeNum(currTime);
